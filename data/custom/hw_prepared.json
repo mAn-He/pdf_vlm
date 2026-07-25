@@ -1,28 +1,10 @@
 {
   "items": [
     {
-      "bucket": 5,
-      "pdf": "D:\\deeplearning\\pdf_vlm\\data\\custom\\5\\hyundai_wia_qa_report_5p.pdf",
-      "doc_id": "hyundai_wia_qa_report_5p_a51f6f1e28",
+      "bucket": 10,
+      "pdf": "D:\\deeplearning\\pdf_vlm\\data\\custom\\10\\hyundai_wia_qa_report_10p.pdf",
+      "doc_id": "hyundai_wia_qa_report_10p_6ef13def50",
       "n_questions": 4
-    },
-    {
-      "bucket": 20,
-      "pdf": "D:\\deeplearning\\pdf_vlm\\data\\custom\\20\\hyundai_wia_qa_report_20p.pdf",
-      "doc_id": "hyundai_wia_qa_report_20p_dee17ef29e",
-      "n_questions": 8
-    },
-    {
-      "bucket": 50,
-      "pdf": "D:\\deeplearning\\pdf_vlm\\data\\custom\\50\\hyundai_wia_qa_report_50p.pdf",
-      "doc_id": "hyundai_wia_qa_report_50p_3ad18fc057",
-      "n_questions": 11
-    },
-    {
-      "bucket": 100,
-      "pdf": "D:\\deeplearning\\pdf_vlm\\data\\custom\\100\\hyundai_wia_qa_report_100p.pdf",
-      "doc_id": "hyundai_wia_qa_report_100p_1cd1f9e7f0",
-      "n_questions": 11
     }
   ]
 }

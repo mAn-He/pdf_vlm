@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Prepare Hyundai WIA quarterly report (QA_report_HW.pdf) as custom 5/20/50/100 packs.
+"""Prepare Hyundai WIA quarterly report (QA_report_HW.pdf) as custom 5/10/20/50/100 packs.
 
 Creates length-truncated PDFs (from cover page), questions.json with gold answers,
 optionally ingests + builds retrieval indexes.
@@ -232,7 +232,7 @@ def main() -> None:
         default=project_root() / "QA_report_HW.pdf",
         help="Full Hyundai WIA quarterly report PDF",
     )
-    parser.add_argument("--buckets", default="5,20,50,100")
+    parser.add_argument("--buckets", default="5,10,20,50,100")
     parser.add_argument("--ingest", action="store_true", help="Ingest PDFs with PaddleOCR (real OCR by default)")
     parser.add_argument(
         "--stub",

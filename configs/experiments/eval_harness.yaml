@@ -7,6 +7,7 @@ seed: 42
 
 datasets:
   - custom_5
+  - custom_10
   - custom_20
   - custom_50
   - custom_100

@@ -1,4 +1,4 @@
-"""Custom PDF dataset loader for 5/20/50/100 page buckets.
+"""Custom PDF dataset loader for 5/10/20/50/100 page buckets.
 
 Expected layout:
   data/custom/<bucket>/
@@ -38,7 +38,7 @@ from pdf_vlm.utils.logging import get_logger
 
 logger = get_logger("data.custom")
 
-CUSTOM_BUCKETS = (5, 20, 50, 100)
+CUSTOM_BUCKETS = (5, 10, 20, 50, 100)
 
 
 def dataset_dir(name: str) -> Path:

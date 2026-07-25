@@ -1,0 +1,14 @@
+{
+  "bucket": 10,
+  "source_pdf": "D:\\deeplearning\\pdf_vlm\\QA_report_HW.pdf",
+  "slice_start_abs_page": 4,
+  "documents": [
+    {
+      "doc_id": "hyundai_wia_qa_report_10p_6ef13def50",
+      "pdf": "hyundai_wia_qa_report_10p.pdf",
+      "num_pages": 10,
+      "stem": "hyundai_wia_qa_report_10p"
+    }
+  ],
+  "n_questions": 4
+}

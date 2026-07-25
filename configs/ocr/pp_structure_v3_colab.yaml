@@ -1,0 +1,25 @@
+# Colab / Linux GPU: enable structure + table recognition
+pipeline: PP-StructureV3
+lang: korean
+ocr_version: PP-OCRv5
+use_gpu: true
+dpi: 144
+cache: true
+
+use_doc_orientation_classify: false
+use_doc_unwarping: false
+use_textline_orientation: false
+use_seal_recognition: false
+use_formula_recognition: false
+use_chart_recognition: false
+use_region_detection: true
+# Tables: ON for Colab (was OFF on Windows due to OOM/crashes)
+use_table_recognition: true
+
+layout_detection_model_name: PP-DocLayout-L
+text_detection_model_name: PP-OCRv5_mobile_det
+text_recognition_model_name: korean_PP-OCRv5_mobile_rec
+
+paddle_subprocess: true
+allow_pdf_text_fallback: true
+paddle_fail_fast_after: 5
