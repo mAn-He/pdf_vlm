@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 from typing import Any, TypeVar
@@ -14,6 +15,19 @@ T = TypeVar("T", bound=BaseModel)
 
 def project_root() -> Path:
     return Path(__file__).resolve().parents[3]
+
+
+def stable_doc_id(pdf_path: str | Path) -> str:
+    """Doc id from file *contents* (machine/path independent).
+
+    Old path-based ids broke Colab vs Windows (same PDF, different absolute path).
+    """
+    path = Path(pdf_path)
+    h = hashlib.sha1()
+    with open(path, "rb") as f:
+        for chunk in iter(lambda: f.read(1 << 20), b""):
+            h.update(chunk)
+    return f"{path.stem}_{h.hexdigest()[:10]}"
 
 
 def resolve_path(path: str | Path, root: Path | None = None) -> Path:

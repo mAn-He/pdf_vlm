@@ -215,8 +215,25 @@ class Gemma3LlamaCpp:
         self._llm = Llama(**kwargs)
 
     def unload(self) -> None:
+        """Drop llama context (important on Colab when switching text ↔ multimodal)."""
+        import gc
+
+        if self._llm is not None:
+            try:
+                del self._llm
+            except Exception:
+                pass
         self._llm = None
         self._vision_enabled = False
+        gc.collect()
+        try:
+            import torch
+
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+        except Exception:
+            pass
+        logger.info("Unloaded Gemma llama context (vision=%s)", self.enable_vision)
 
     def _run_chat(
         self,

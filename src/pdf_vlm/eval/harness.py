@@ -50,31 +50,74 @@ class EvaluationHarness:
             model_rel = model_rel[len("configs/") :]
         return load_named_config(model_rel)
 
-    def _ensure_llms(self) -> None:
+    def _release_llms(self) -> None:
+        """Free GPU/CPU llama contexts before loading the other modality."""
+        import gc
+
+        if self._text_llm is not None:
+            self._text_llm.unload()
+            self._text_llm = None
+        if self._mm_llm is not None:
+            self._mm_llm.unload()
+            self._mm_llm = None
+        self._pipe_cache.clear()
+        gc.collect()
+        try:
+            import torch
+
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+        except Exception:
+            pass
+
+    def _ensure_llm_for(self, pipeline_type: str) -> None:
+        """Load at most one Gemma instance (text XOR multimodal) — Colab VRAM safe."""
         if self.config.dry_run:
             return
         from pdf_vlm.llm.gemma_llama_cpp import build_llm
 
         cfg = self._load_model_cfg()
-        needs_text = "text" in self.config.pipelines
-        needs_mm = any(p in {"multimodal", "mm"} for p in self.config.pipelines)
+        want_mm = pipeline_type in {"multimodal", "mm"}
 
-        if needs_text:
-            text_cfg = dict(cfg)
-            text_cfg["local_path"] = str(resolve_path(text_cfg["local_path"]))
-            text_cfg["enable_vision"] = False
-            text_cfg["mmproj_local_path"] = None
-            self._text_llm = build_llm(text_cfg)
+        if want_mm:
+            if self._text_llm is not None:
+                logger.info("Switching LLM: unload text before multimodal")
+                self._text_llm.unload()
+                self._text_llm = None
+                self._pipe_cache.clear()
+            if self._mm_llm is None:
+                mm_cfg = dict(cfg)
+                mm_cfg["local_path"] = str(resolve_path(mm_cfg["local_path"]))
+                if mm_cfg.get("mmproj_local_path"):
+                    mm_cfg["mmproj_local_path"] = str(resolve_path(mm_cfg["mmproj_local_path"]))
+                mm_cfg["enable_vision"] = True
+                # Smaller context for vision on limited VRAM
+                mm_cfg["n_ctx"] = min(int(mm_cfg.get("n_ctx") or 8192), 4096)
+                mm_cfg["n_batch"] = min(int(mm_cfg.get("n_batch") or 512), 256)
+                self._mm_llm = build_llm(mm_cfg)
+        else:
+            if self._mm_llm is not None:
+                logger.info("Switching LLM: unload multimodal before text")
+                self._mm_llm.unload()
+                self._mm_llm = None
+                self._pipe_cache.clear()
+            if self._text_llm is None:
+                text_cfg = dict(cfg)
+                text_cfg["local_path"] = str(resolve_path(text_cfg["local_path"]))
+                text_cfg["enable_vision"] = False
+                text_cfg["mmproj_local_path"] = None
+                text_cfg["n_ctx"] = min(int(text_cfg.get("n_ctx") or 8192), 4096)
+                self._text_llm = build_llm(text_cfg)
 
-        if needs_mm:
-            mm_cfg = dict(cfg)
-            mm_cfg["local_path"] = str(resolve_path(mm_cfg["local_path"]))
-            if mm_cfg.get("mmproj_local_path"):
-                mm_cfg["mmproj_local_path"] = str(resolve_path(mm_cfg["mmproj_local_path"]))
-            mm_cfg["enable_vision"] = True
-            self._mm_llm = build_llm(mm_cfg)
+    def _ensure_llms(self) -> None:
+        # Backward-compatible entry: prefer lazy load in run(); keep no-op warm path.
+        if self.config.dry_run:
+            return
+        # Do not preload both — that OOMs Colab (Failed to create llama_context).
+        logger.info("LLM load deferred until first text/multimodal cell (VRAM-safe)")
 
     def _get_pipeline(self, cell: ExperimentCell, doc_id: str):
+        self._ensure_llm_for(cell.pipeline_type)
         key = (cell.pipeline_type, cell.retrieval_type, doc_id, cell.top_k)
         if key in self._pipe_cache:
             return self._pipe_cache[key]
@@ -233,14 +276,26 @@ class EvaluationHarness:
         # Cache examples per dataset
         examples_cache: dict[str, list[QAExample] | None] = {}
 
-        for cell in self.config.iter_cells():
+        # Run all text cells before multimodal so we only hold one llama context.
+        cells = list(self.config.iter_cells())
+        cells.sort(key=lambda c: 0 if c.pipeline_type == "text" else 1)
+
+        for cell in cells:
             if cell.dataset not in examples_cache:
                 examples_cache[cell.dataset] = self._load_examples(cell.dataset)
             examples = examples_cache[cell.dataset]
             if not examples:
                 continue
 
-            rows = self.run_cell(cell, examples)
+            try:
+                rows = self.run_cell(cell, examples)
+            except Exception as e:
+                msg = f"{cell.cell_id}: {e}"
+                self.skipped.append(msg)
+                logger.warning("Skip cell after error: %s", msg)
+                # Free context after hard llama failures so later cells can proceed
+                self._release_llms()
+                continue
             if not rows:
                 continue
             all_rows.extend(rows)

@@ -39,8 +39,9 @@ ABS = {
 
 
 def _doc_id_for(pdf_path: Path) -> str:
-    digest = hashlib.sha1(str(pdf_path.resolve()).encode("utf-8")).hexdigest()[:10]
-    return f"{pdf_path.stem}_{digest}"
+    from pdf_vlm.utils.io import stable_doc_id
+
+    return stable_doc_id(pdf_path)
 
 
 def _rel(abs_page: int) -> int:

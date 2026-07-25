@@ -37,8 +37,9 @@ def _maybe_disable_onednn() -> None:
 
 
 def _doc_id_from_path(pdf_path: Path) -> str:
-    digest = hashlib.sha1(str(pdf_path.resolve()).encode("utf-8")).hexdigest()[:10]
-    return f"{pdf_path.stem}_{digest}"
+    from pdf_vlm.utils.io import stable_doc_id
+
+    return stable_doc_id(pdf_path)
 
 
 def _artifact_paths(processed_dir: Path, doc_id: str) -> dict[str, Path]:

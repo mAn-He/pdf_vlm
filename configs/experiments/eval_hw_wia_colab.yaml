@@ -23,7 +23,7 @@ retrievals:
 
 top_k: [3]
 coarse_k: 5
-max_images: 3
+max_images: 2
 
 index_variants:
   page: page_text
@@ -33,7 +33,7 @@ generation:
   max_tokens: 128
   temperature: 0.1
 
-model: models/gemma3_4b_qat.yaml
+model: models/gemma3_4b_qat_colab.yaml
 
 system_metrics:
   track_rss: true
