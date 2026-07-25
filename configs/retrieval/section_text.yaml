@@ -1,0 +1,16 @@
+variant: section_text
+modality: text
+retrieval: section
+baseline: text_only_rag
+embedder:
+  name: BAAI/bge-m3
+  device: cpu
+  batch_size: 16
+  normalize: true
+index:
+  type: faiss
+  metric: ip
+top_k: 3
+chunk:
+  unit: section
+  max_chars: 8000

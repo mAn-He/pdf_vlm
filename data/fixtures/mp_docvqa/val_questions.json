@@ -1,0 +1,26 @@
+[
+  {
+    "questionId": "mp_q1",
+    "doc_id": "docA",
+    "question": "What is the company name?",
+    "answers": ["Acme"],
+    "page_ids": [0],
+    "question_type": "text"
+  },
+  {
+    "questionId": "mp_q2",
+    "doc_id": "docA",
+    "question": "What is the revenue in the table?",
+    "answers": ["12.5M"],
+    "page_ids": [1],
+    "evidence_modality": ["table"],
+    "question_type": "table"
+  },
+  {
+    "questionId": "mp_q3",
+    "doc_id": "docB",
+    "question": "Where is HQ?",
+    "answers": ["Seoul"],
+    "page": 0
+  }
+]

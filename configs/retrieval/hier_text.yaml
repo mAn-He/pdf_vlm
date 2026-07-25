@@ -1,0 +1,17 @@
+variant: hier_text
+modality: text
+retrieval: hierarchical
+baseline: retrieval_granularity
+embedder:
+  name: BAAI/bge-m3
+  device: cpu
+  batch_size: 16
+  normalize: true
+index:
+  type: faiss
+  metric: ip
+hierarchy_strategy: auto   # auto|heading|markdown|spacing|page|toc
+fine_unit: page            # page|paragraph
+coarse_k: 5
+fine_k: 3
+top_k: 3

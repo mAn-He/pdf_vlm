@@ -1,0 +1,48 @@
+# Slim 2×2 matrix (text/mm × page/hier) on short docs — used by eval harness
+name: modality_x_retrieval_2x2
+description: Compare text-only vs multimodal RAG crossed with page-level vs hierarchical retrieval
+seed: 42
+
+datasets:
+  - custom_5
+  - custom_20
+
+pipelines:
+  - text
+  - multimodal
+
+retrievals:
+  - page
+  - hierarchical
+
+top_k: [1, 3, 5]
+coarse_k: 5
+
+index_variants:
+  page: page_text
+  hierarchical: hier_text
+
+generation:
+  max_tokens: 256
+  temperature: 0.1
+
+model: models/gemma3_4b_qat.yaml
+
+system_metrics:
+  track_rss: true
+  track_vram: true
+
+skip_missing_dataset: true
+skip_missing_index: true
+skip_missing_artifact: true
+
+device: cpu
+dry_run: false
+
+output_dir: results/runs
+report_dir: results/reports
+figures_dir: results/figures
+
+metrics:
+  primary: anls
+  ks: [1, 3, 5]

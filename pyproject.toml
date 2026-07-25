@@ -1,0 +1,45 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pdf-vlm"
+version = "0.1.0"
+description = "Local document QA: Gemma 3 4B + PaddleOCR PP-StructureV3 RAG experiments"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "typer>=0.12",
+  "pyyaml>=6.0",
+  "pydantic>=2.6",
+  "numpy>=1.26",
+  "Pillow>=10.0",
+  "pymupdf>=1.24",
+  "psutil>=5.9",
+  "tqdm>=4.66",
+  "rich>=13.7",
+  "huggingface_hub>=0.24",
+]
+
+[project.optional-dependencies]
+llm = ["llama-cpp-python>=0.3.0"]
+ocr = [
+  "paddlepaddle==3.2.2",
+  "paddleocr>=3.0.0,<3.8.0",
+  "paddlex[ocr]>=3.7.0,<3.8.0",
+]
+index = ["faiss-cpu>=1.8.0", "sentence-transformers>=3.0.0", "torch>=2.2.0"]
+gpu-metrics = ["pynvml>=11.5.0"]
+viz = ["matplotlib>=3.8.0"]
+dev = ["pytest>=8.0", "ruff>=0.5"]
+all = ["pdf-vlm[llm,ocr,index,gpu-metrics,viz,dev]"]
+
+[project.scripts]
+pdf-vlm = "pdf_vlm.cli:app"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]

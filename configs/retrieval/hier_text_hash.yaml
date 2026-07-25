@@ -1,0 +1,17 @@
+variant: hier_text_hash
+modality: text
+retrieval: hierarchical
+baseline: text_only_rag
+embedder:
+  name: hash
+  device: cpu
+  batch_size: 64
+  normalize: true
+  dim: 1024
+index:
+  type: faiss
+  metric: ip
+top_k: 3
+coarse_k: 5
+fine_unit: page
+hierarchy_strategy: auto

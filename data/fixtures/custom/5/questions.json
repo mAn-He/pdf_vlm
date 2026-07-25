@@ -1,0 +1,27 @@
+[
+  {
+    "example_id": "c5_q1",
+    "doc_id": "toy5",
+    "question": "When was Acme founded?",
+    "answers": ["1998"],
+    "evidence_pages": [0],
+    "question_type": "text"
+  },
+  {
+    "example_id": "c5_q2",
+    "doc_id": "toy5",
+    "question": "What does the sales chart peak at?",
+    "answer": "80",
+    "evidence_pages": [2],
+    "question_type": "chart",
+    "evidence_modality": ["chart"]
+  },
+  {
+    "example_id": "c5_q3",
+    "doc_id": "toy5",
+    "question": "Combine office city and warranty length.",
+    "answers": ["Seoul / 24 months"],
+    "evidence_pages": [3, 4],
+    "question_type": "cross-page"
+  }
+]

@@ -1,0 +1,17 @@
+variant: page_text_hash
+modality: text
+retrieval: page
+baseline: text_only_rag
+embedder:
+  name: hash
+  device: cpu
+  batch_size: 64
+  normalize: true
+  dim: 1024
+index:
+  type: faiss
+  metric: ip
+top_k: 3
+chunk:
+  unit: page
+  max_chars: 8000

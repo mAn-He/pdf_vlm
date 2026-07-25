@@ -1,0 +1,5 @@
+run_id,case_id,modality,top_k,page_bucket,n_images,prompt_chars,repeat,ttft_ms,e2e_ms,tokens_per_sec,prompt_tokens,completion_tokens,peak_rss_mb,peak_vram_mb,load_rss_mb,answer_preview,meta
+gemma_infer_bench_20260725_004502,text_bucket5_k1,text,1,5,0,973,0,41.946,361.946,200.0,243,64,206.4453125,,203.234375,1998,
+gemma_infer_bench_20260725_004502,text_bucket5_k3,text,3,5,0,2577,0,45.153999999999996,365.154,200.0,644,64,206.5546875,,203.234375,1998,
+gemma_infer_bench_20260725_004502,multimodal_bucket5_k1,multimodal,1,5,1,973,0,66.946,386.946,200.0,243,64,206.5546875,,203.234375,1998,
+gemma_infer_bench_20260725_004502,multimodal_bucket5_k3,multimodal,3,5,3,2577,0,120.154,440.154,200.0,644,64,206.5546875,,203.234375,1998,

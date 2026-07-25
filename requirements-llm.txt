@@ -1,0 +1,5 @@
+# LLM / Gemma local inference extras
+# Windows (no MSVC): use the CPU wheel index below
+#   pip install -r requirements-llm.txt --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/cpu
+llama-cpp-python>=0.3.34
+huggingface_hub>=0.24

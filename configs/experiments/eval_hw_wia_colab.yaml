@@ -1,0 +1,51 @@
+# Colab-friendly Hyundai WIA eval (hash embedder, start with 5/20 pages)
+name: eval_hw_wia_colab
+description: >
+  Colab path for Hyundai WIA packs. Uses hashing embedder indexes by default
+  to avoid BGE-M3 OOM on free-tier RAM. Set dry_run=false after GGUF download.
+seed: 42
+
+datasets:
+  - custom_5
+  - custom_20
+
+pipelines:
+  - text
+  - multimodal
+
+retrievals:
+  - page
+  - hierarchical
+
+top_k: [3]
+coarse_k: 5
+max_images: 2
+
+index_variants:
+  page: page_text
+  hierarchical: hier_text
+
+generation:
+  max_tokens: 96
+  temperature: 0.1
+
+model: models/gemma3_4b_qat.yaml
+
+system_metrics:
+  track_rss: true
+  track_vram: true
+
+skip_missing_dataset: true
+skip_missing_index: true
+skip_missing_artifact: true
+
+device: cuda
+dry_run: true
+
+output_dir: results/runs
+report_dir: results/reports
+figures_dir: results/figures
+
+metrics:
+  primary: anls
+  ks: [1, 3, 5]

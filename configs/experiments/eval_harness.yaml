@@ -1,0 +1,57 @@
+# Full evaluation harness: modality × retrieval × page-length buckets
+name: eval_harness_full
+description: >
+  Auto-run text-only vs multimodal RAG crossed with page vs hierarchical
+  retrieval, aggregated by question type and 5/20/50/100 page buckets.
+seed: 42
+
+datasets:
+  - custom_5
+  - custom_20
+  - custom_50
+  - custom_100
+
+# Select which pipeline cells to run (2×2 by default)
+pipelines:
+  - text
+  - multimodal
+
+retrievals:
+  - page
+  - hierarchical
+
+top_k: [3]
+coarse_k: 5
+max_images: null   # multimodal: default = top_k
+
+# Shared text indexes (multimodal reuses text retrieval for fairness)
+index_variants:
+  page: page_text
+  hierarchical: hier_text
+  section: section_text
+
+generation:
+  max_tokens: 256
+  temperature: 0.1
+
+model: models/gemma3_4b_qat.yaml
+
+system_metrics:
+  track_rss: true
+  track_vram: true
+
+# Skip cells when index/dataset/artifact is missing (recommended for incremental runs)
+skip_missing_dataset: true
+skip_missing_index: true
+skip_missing_artifact: true
+
+device: cpu
+dry_run: false
+
+output_dir: results/runs
+report_dir: results/reports
+figures_dir: results/figures
+
+metrics:
+  primary: anls
+  ks: [1, 3, 5]

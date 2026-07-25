@@ -1,0 +1,29 @@
+pipeline: PP-StructureV3
+lang: korean
+ocr_version: PP-OCRv5
+# Windows laptop: prefer CPU or set true if you have free VRAM
+use_gpu: false
+dpi: 144
+cache: true
+
+# Disable heavy optional heads to reduce RAM/VRAM / Windows crashes
+use_doc_orientation_classify: false
+use_doc_unwarping: false
+use_textline_orientation: false
+use_seal_recognition: false
+use_formula_recognition: false
+use_chart_recognition: false
+use_region_detection: false
+# Table models (SLANeXt) can OOM/crash on some Windows setups — off by default.
+# Re-enable after confirming stable: use_table_recognition: true
+use_table_recognition: false
+
+# Lighter models (mobile) — override server defaults
+layout_detection_model_name: PP-DocLayout-S
+text_detection_model_name: PP-OCRv5_mobile_det
+text_recognition_model_name: korean_PP-OCRv5_mobile_rec
+
+paddle_subprocess: true
+allow_pdf_text_fallback: true
+# After N consecutive Paddle worker failures, skip Paddle for the rest (use PDF text)
+paddle_fail_fast_after: 2

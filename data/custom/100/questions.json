@@ -1,0 +1,187 @@
+[
+  {
+    "example_id": "hw100_q_company",
+    "doc_id": "hyundai_wia_qa_report_100p_1cd1f9e7f0",
+    "question": "이 분기보고서의 회사명은 무엇인가?",
+    "answers": [
+      "현대위아 주식회사",
+      "현대위아"
+    ],
+    "evidence_pages": [
+      0
+    ],
+    "question_type": "text",
+    "evidence_modality": [
+      "text"
+    ]
+  },
+  {
+    "example_id": "hw100_q_overview",
+    "doc_id": "hyundai_wia_qa_report_100p_1cd1f9e7f0",
+    "question": "당사(현대위아)의 사업의 개요에서 주요 사업 부문은 무엇인가?",
+    "answers": [
+      "차량부품, 모빌리티솔루션 및 특수사업",
+      "차량부품, 모빌리티솔루션, 특수사업"
+    ],
+    "evidence_pages": [
+      4
+    ],
+    "question_type": "text",
+    "evidence_modality": [
+      "text"
+    ]
+  },
+  {
+    "example_id": "hw100_q_products",
+    "doc_id": "hyundai_wia_qa_report_100p_1cd1f9e7f0",
+    "question": "차량부품 부문이 글로벌 완성차 업체를 대상으로 생산·공급하는 주요 제품·서비스는 무엇인가?",
+    "answers": [
+      "엔진, 모듈, 등속조인트, 4WD 부품 및 열관리 관련 부품",
+      "엔진, 모듈, 등속조인트, 4WD, 열관리 부품"
+    ],
+    "evidence_pages": [
+      4
+    ],
+    "question_type": "text",
+    "evidence_modality": [
+      "text"
+    ]
+  },
+  {
+    "example_id": "hw100_q_mobility",
+    "doc_id": "hyundai_wia_qa_report_100p_1cd1f9e7f0",
+    "question": "모빌리티솔루션 부문은 어떤 분야를 중심으로 솔루션을 제공하는가?",
+    "answers": [
+      "로봇 및 스마트팩토리",
+      "로봇, 스마트팩토리"
+    ],
+    "evidence_pages": [
+      4
+    ],
+    "question_type": "text",
+    "evidence_modality": [
+      "text"
+    ]
+  },
+  {
+    "example_id": "hw100_q_contract",
+    "doc_id": "hyundai_wia_qa_report_100p_1cd1f9e7f0",
+    "question": "공작기계사업부문 매각 계약의 거래금액은 얼마인가?",
+    "answers": [
+      "3,400억원",
+      "3400억원",
+      "3,400억"
+    ],
+    "evidence_pages": [
+      11
+    ],
+    "question_type": "text",
+    "evidence_modality": [
+      "text",
+      "table"
+    ]
+  },
+  {
+    "example_id": "hw100_q_contract_counterparty",
+    "doc_id": "hyundai_wia_qa_report_100p_1cd1f9e7f0",
+    "question": "공작기계사업부문 매각의 거래 상대방은 누구인가?",
+    "answers": [
+      "에이치엠티테크 & 에이치엠티솔루션 컨소시엄",
+      "에이치엠티테크와 에이치엠티솔루션 컨소시엄"
+    ],
+    "evidence_pages": [
+      11
+    ],
+    "question_type": "text",
+    "evidence_modality": [
+      "text"
+    ]
+  },
+  {
+    "example_id": "hw100_q_kr_prod",
+    "doc_id": "hyundai_wia_qa_report_100p_1cd1f9e7f0",
+    "question": "2026년 1분기 국내 자동차 생산 실적은 몇 대인가?",
+    "answers": [
+      "1,025,981대",
+      "1025981대",
+      "1,025,981"
+    ],
+    "evidence_pages": [
+      15
+    ],
+    "question_type": "table",
+    "evidence_modality": [
+      "text",
+      "table"
+    ]
+  },
+  {
+    "example_id": "hw100_q_global_prod",
+    "doc_id": "hyundai_wia_qa_report_100p_1cd1f9e7f0",
+    "question": "2026년 글로벌 자동차 생산실적 및 전망에서, 2026년 글로벌 자동차 생산량은 어떻게 전망되는가?",
+    "answers": [
+      "전년 대비 제한적인 성장세",
+      "제한적인 성장세가 전망",
+      "전년 대비 제한적 성장"
+    ],
+    "evidence_pages": [
+      16
+    ],
+    "question_type": "text",
+    "evidence_modality": [
+      "text"
+    ]
+  },
+  {
+    "example_id": "hw100_q_assets",
+    "doc_id": "hyundai_wia_qa_report_100p_1cd1f9e7f0",
+    "question": "요약 연결재무제표 기준 제51기 1분기(2026년 3월말) 자산총계는 얼마인가? (단위: 백만원)",
+    "answers": [
+      "7,219,019",
+      "7219019",
+      "7,219,019백만원"
+    ],
+    "evidence_pages": [
+      27
+    ],
+    "question_type": "table",
+    "evidence_modality": [
+      "text",
+      "table"
+    ]
+  },
+  {
+    "example_id": "hw100_q_liab",
+    "doc_id": "hyundai_wia_qa_report_100p_1cd1f9e7f0",
+    "question": "요약 연결재무제표 기준 제51기 1분기(2026년 3월말) 부채총계는 얼마인가? (단위: 백만원)",
+    "answers": [
+      "3,071,872",
+      "3071872"
+    ],
+    "evidence_pages": [
+      27
+    ],
+    "question_type": "table",
+    "evidence_modality": [
+      "text",
+      "table"
+    ]
+  },
+  {
+    "example_id": "hw100_q_revenue",
+    "doc_id": "hyundai_wia_qa_report_100p_1cd1f9e7f0",
+    "question": "별도 요약손익 기준 제51기 1분기(2026.1.1~2026.3.31) 매출액은 얼마인가? (단위: 백만원)",
+    "answers": [
+      "1,918,322",
+      "1918322"
+    ],
+    "evidence_pages": [
+      28
+    ],
+    "question_type": "table",
+    "evidence_modality": [
+      "text",
+      "table"
+    ]
+  }
+]

@@ -1,0 +1,14 @@
+variant: page_mm
+modality: multimodal
+retrieval: page
+embedder:
+  name: google/siglip-base-patch16-224
+  device: cuda
+  batch_size: 8
+  normalize: true
+index:
+  type: faiss
+  metric: ip
+top_k: 3
+chunk:
+  unit: page_image

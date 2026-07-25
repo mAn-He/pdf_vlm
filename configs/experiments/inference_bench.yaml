@@ -1,0 +1,22 @@
+# Gemma 3 4B QAT local inference practicality benchmark
+name: gemma_inference_bench
+description: >
+  Measure TTFT, e2e latency, tokens/sec, and memory for text-only vs
+  image+text, sweeping top-k evidence under 5/20/50/100 page buckets.
+seed: 42
+
+model: models/gemma3_4b_qat.yaml
+
+# Generation budget (short answers — deployment UX, not long essays)
+max_tokens: 64
+temperature: 0.0
+repeats: 2
+warmup: 1
+
+# Evidence scaling
+top_ks: [1, 3, 5]
+page_buckets: [5, 20, 50, 100]
+chars_per_page: 800
+modalities: [text, multimodal]
+
+output_dir: results/bench

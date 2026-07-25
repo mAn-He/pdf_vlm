@@ -1,0 +1,10 @@
+{
+  "bucket": 5,
+  "documents": [
+    {
+      "doc_id": "toy5",
+      "pdf": "toy5.pdf",
+      "num_pages": 5
+    }
+  ]
+}

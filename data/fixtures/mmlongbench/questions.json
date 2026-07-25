@@ -1,0 +1,43 @@
+[
+  {
+    "id": "mm_q1",
+    "doc_id": "longA",
+    "question": "What year was the company founded?",
+    "answer": "1998",
+    "evidence_pages": [0],
+    "evidence_sources": ["text"]
+  },
+  {
+    "id": "mm_q2",
+    "doc_id": "longA",
+    "question": "Read the chart: which product sold most?",
+    "answer": "VisionX-4",
+    "evidence_pages": [2],
+    "evidence_sources": ["chart"]
+  },
+  {
+    "id": "mm_q3",
+    "doc_id": "longA",
+    "question": "Compare HQ city and support email.",
+    "answer": "Seoul / support@acme.example",
+    "evidence_pages": [0, 3],
+    "evidence_sources": ["text", "layout"]
+  },
+  {
+    "id": "mm_q4",
+    "doc_id": "longB",
+    "question": "What is the table total?",
+    "answers": ["42"],
+    "evidence_pages": [1],
+    "evidence_sources": ["table"]
+  },
+  {
+    "id": "mm_q5",
+    "doc_id": "longB",
+    "question": "Who is the CEO?",
+    "answer": "unanswerable",
+    "unanswerable": true,
+    "evidence_pages": [],
+    "evidence_sources": []
+  }
+]

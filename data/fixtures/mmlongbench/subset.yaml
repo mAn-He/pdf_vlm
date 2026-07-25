@@ -1,0 +1,8 @@
+max_docs: 5
+max_questions: 20
+include_unanswerable: true
+seed: 0
+# Optional filters:
+# question_types: [text, table, chart, cross-page]
+# evidence_modalities: [text, table, chart]
+# doc_ids: [longA]

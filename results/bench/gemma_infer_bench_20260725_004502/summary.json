@@ -1,0 +1,48 @@
+{
+  "run_id": "gemma_infer_bench_20260725_004502",
+  "out_dir": "results\\bench\\gemma_infer_bench_20260725_004502",
+  "report_md": "results\\bench\\gemma_infer_bench_20260725_004502\\report.md",
+  "n_rows": 4,
+  "practicality": {
+    "model": "gemma-3-4b-it-qat-q4_0",
+    "host": {
+      "platform": "Windows-10-10.0.26200-SP0",
+      "python": "3.11.1",
+      "processor": "Intel64 Family 6 Model 167 Stepping 1, GenuineIntel",
+      "machine": "AMD64",
+      "rss_mb_now": 203.23,
+      "vram_mb_now": null,
+      "ram_total_gb": 31.77,
+      "ram_available_gb": 13.63
+    },
+    "backend_hint": "CPU_or_unknown",
+    "practicality_score": "interactive_local",
+    "highlights": [
+      "Text decode ~200.0 tok/s → snappy interactive QA.",
+      "Best text TTFT 42 ms → feels interactive.",
+      "Multimodal top-3 e2e is ~1.21× text (440 ms vs 365 ms) — expect vision cost on each call.",
+      "On 5-page bucket, raising top-k 1→3 changes text e2e by ~1.01× (prefill grows with evidence).",
+      "Peak RSS ~207 MB fits typical 16GB laptops alongside OCR/index.",
+      "No VRAM reported (CPU build or pynvml missing) — CPU path is valid but slower."
+    ],
+    "recommendation": "Keep retrieval top-k small (1–3), max_tokens≤128 for interactive use, and use gemma-3-4b-it-qat-q4_0 Q4_0 so text+vision share a ~3–4GB weight budget on a local machine.",
+    "thresholds": {
+      "interactive_tok_s": 20,
+      "usable_tok_s": 8,
+      "batch_tok_s": 3,
+      "interactive_ttft_ms": 500,
+      "prototype_ttft_ms": 2000,
+      "comfortable_e2e_ms_short_answer": 8000
+    }
+  },
+  "host": {
+    "platform": "Windows-10-10.0.26200-SP0",
+    "python": "3.11.1",
+    "processor": "Intel64 Family 6 Model 167 Stepping 1, GenuineIntel",
+    "machine": "AMD64",
+    "rss_mb_now": 203.23,
+    "vram_mb_now": null,
+    "ram_total_gb": 31.77,
+    "ram_available_gb": 13.63
+  }
+}

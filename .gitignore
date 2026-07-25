@@ -1,0 +1,51 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+dist/
+build/
+.venv/
+venv/
+.env
+
+# Models & heavy artifacts
+models/**
+!models/.gitkeep
+data/raw/**
+!data/raw/.gitkeep
+data/processed/**
+!data/processed/.gitkeep
+indices/**
+!indices/.gitkeep
+artifacts/**
+!artifacts/smoke/.gitkeep
+
+# Results
+results/runs/**
+!results/runs/.gitkeep
+results/tables/**
+!results/tables/.gitkeep
+results/reports/**
+!results/reports/.gitkeep
+results/figures/**
+!results/figures/.gitkeep
+
+# Large local source PDFs (truncated packs under data/custom are kept)
+QA_report_HW.pdf
+*.gguf
+
+# IDE / OS
+.idea/
+.vscode/
+.cursor/
+*.swp
+Thumbs.db
+.DS_Store
+
+# Caches
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+*.faiss
+*.npy

@@ -1,0 +1,10 @@
+{
+  "platform": "Windows-10-10.0.26200-SP0",
+  "python": "3.11.1",
+  "processor": "Intel64 Family 6 Model 167 Stepping 1, GenuineIntel",
+  "machine": "AMD64",
+  "rss_mb_now": 203.25,
+  "vram_mb_now": null,
+  "ram_total_gb": 31.77,
+  "ram_available_gb": 13.46
+}

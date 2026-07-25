@@ -1,0 +1,22 @@
+variant: hier_mm
+modality: multimodal
+retrieval: hierarchical
+text_embedder:
+  name: BAAI/bge-m3
+  device: cuda
+  batch_size: 16
+  normalize: true
+vision_embedder:
+  name: google/siglip-base-patch16-224
+  device: cuda
+  batch_size: 8
+  normalize: true
+index:
+  type: faiss
+  metric: ip
+levels:
+  - section
+  - page
+coarse_k: 5
+fine_k: 3
+top_k: 3

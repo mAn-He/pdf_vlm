@@ -1,0 +1,18 @@
+name: gemma-3-4b-it-qat-q4_0
+backend: llama_cpp
+# Official Google QAT GGUF (text) + mmproj (vision)
+# https://huggingface.co/google/gemma-3-4b-it-qat-q4_0-gguf
+repo_id: google/gemma-3-4b-it-qat-q4_0-gguf
+filename: gemma-3-4b-it-q4_0.gguf
+local_path: models/gemma-3-4b-it-q4_0.gguf
+mmproj_repo_id: google/gemma-3-4b-it-qat-q4_0-gguf
+mmproj_filename: mmproj-model-f16-4B.gguf
+mmproj_local_path: models/mmproj-model-f16-4B.gguf
+enable_vision: true
+chat_format: gemma
+# 8192 is enough for smoke tests; raise toward 128k if VRAM allows
+n_ctx: 8192
+# -1 = offload all layers to GPU when CUDA/Metal build is available
+n_gpu_layers: -1
+n_batch: 512
+verbose: false

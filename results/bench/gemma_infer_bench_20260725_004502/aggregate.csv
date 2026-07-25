@@ -1,0 +1,5 @@
+modality,page_bucket,top_k,n,prompt_chars_mean,ttft_ms_mean,e2e_ms_mean,tokens_per_sec_mean,peak_rss_mb_max,peak_vram_mb_max,n_images
+multimodal,5,1,1,973.0,66.946,386.946,200.0,206.5546875,,1
+multimodal,5,3,1,2577.0,120.154,440.154,200.0,206.5546875,,3
+text,5,1,1,973.0,41.946,361.946,200.0,206.4453125,,0
+text,5,3,1,2577.0,45.153999999999996,365.154,200.0,206.5546875,,0

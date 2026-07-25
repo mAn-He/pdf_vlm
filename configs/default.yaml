@@ -1,0 +1,29 @@
+project_root: .
+seed: 42
+
+paths:
+  models_dir: models
+  data_raw: data/raw
+  data_processed: data/processed
+  data_custom: data/custom
+  indices_dir: indices
+  results_dir: results/runs
+
+dataset: custom_5
+modality: text          # text | multimodal
+retrieval: page         # page | hierarchical
+top_k: 3
+
+model: models/gemma3_4b_qat.yaml
+ocr: ocr/pp_structure_v3.yaml
+retrieval_cfg: retrieval/page_text.yaml
+
+generation:
+  max_tokens: 256
+  temperature: 0.1
+  n_ctx: 8192
+  n_gpu_layers: -1
+
+system_metrics:
+  track_rss: true
+  track_vram: true
