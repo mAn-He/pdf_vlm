@@ -30,6 +30,14 @@ results/reports/**
 !results/reports/.gitkeep
 results/figures/**
 !results/figures/.gitkeep
+results/bench/**
+!results/bench/.gitkeep
+
+# Local Colab/result dumps (do not commit)
+pdf_vlm_all_results_*/
+pdf_vlm_all_results_*.zip
+colab_results/
+_tmp_*.py
 
 # Large local source PDFs (truncated packs under data/custom are kept)
 QA_report_HW.pdf
