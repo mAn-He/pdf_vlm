@@ -15,7 +15,8 @@ SYSTEM_PROMPT_TEXT_ONLY = (
     "Use ONLY the OCR text evidence provided below. "
     "Do not assume information that is not present in the evidence. "
     "If the evidence is insufficient, reply exactly: unanswerable. "
-    "Return a short final answer without explanations."
+    "Answer in Korean when the question is in Korean. "
+    "Return only a short final answer — no explanations, no page citations."
 )
 
 SYSTEM_PROMPT_MULTIMODAL = (
@@ -23,7 +24,9 @@ SYSTEM_PROMPT_MULTIMODAL = (
     "Use the OCR text evidence AND the attached page images together. "
     "Images are especially useful for tables, charts, and captions that OCR may miss. "
     "If the evidence is insufficient, reply exactly: unanswerable. "
-    "Always mention the supporting page number(s), e.g. [page 2]."
+    "Answer in Korean when the question is in Korean. "
+    "Return only a short final answer — no explanations, no page citations "
+    "(do not write [page N] or similar)."
 )
 
 SYSTEM_PROMPT = SYSTEM_PROMPT_TEXT_ONLY
@@ -37,7 +40,8 @@ TEXT_ONLY_USER_TEMPLATE = """# Document Evidence (OCR text only)
 # Instructions
 - Base the answer strictly on the evidence above.
 - If multiple evidence blocks conflict, prefer the higher-ranked (earlier) block.
-- Output only the final answer.
+- If the question is in Korean, answer in Korean.
+- Output only the final answer (no page citations, no commentary).
 """
 
 MULTIMODAL_USER_TEMPLATE = """# Question
@@ -52,11 +56,11 @@ The attached images correspond to these retrieved pages (in order):
 
 # Instructions
 - Use both OCR text and page images. Prefer images for tables/charts/layout.
-- Cite the supporting page number(s) in your answer, e.g. [page 1] or [pages 1, 3].
+- If the question is in Korean, answer in Korean.
+- Do NOT include page citations like [page 1] or [pages 1, 3] in the answer.
 - If evidence is insufficient, reply exactly: unanswerable.
-- Keep the answer short; include page citation.
+- Output only the short final answer.
 """
-
 
 def format_text_evidence(hits: list[RetrievalHit], max_chars: int = 12000) -> str:
     parts: list[str] = []
