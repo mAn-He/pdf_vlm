@@ -1,14 +1,14 @@
 # pdf-vlm — Local Multimodal Document QA
 
-**Quantized Gemma 3 4B** + **PaddleOCR PP-StructureV3** for private, on-device document question answering.
+**Quantized Gemma 3 4B** + **PaddleOCR PP-StructureV3** for private, on-device document question answering over **long reports (200+ pages)**.
 
 This repo is a **product-shaped research stack**: YAML configs, shared retrieval for a fair text vs multimodal A/B, an evaluation harness, and local inference benchmarks — not a notebook dump.
 
 | Axis | What we compare |
 |------|-----------------|
-| Generation | **Text-only RAG** vs **multimodal RAG** (same top-k pages + images) |
+| Generation | **Text-only RAG** vs **multimodal RAG** (same retrieved pages; MM adds page images) |
 | Retrieval | **Page-level** vs **hierarchical** (coarse section → fine page) |
-| Document length | Hyundai WIA report packs at **5 / 10 / 20 / 50 / 100** pages |
+| Document length | Length-truncated packs **5 / 10 / 20 / 50 / 100** pages carved from **200+ page** source reports |
 | Practicality | TTFT, tok/s, e2e latency, RSS / VRAM (separate inference bench) |
 
 > **Colab:** open [`notebooks/pdf_vlm_colab.ipynb`](notebooks/pdf_vlm_colab.ipynb) — [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/mAn-He/pdf_vlm/blob/main/notebooks/pdf_vlm_colab.ipynb)
@@ -19,27 +19,28 @@ This repo is a **product-shaped research stack**: YAML configs, shared retrieval
 
 ## What we set out to learn
 
-Private long PDFs (financial / industrial reports) are a bad fit for cloud VLMs. We wanted a **local** stack and clear empirical answers to:
+**200+ page** private reports (financial / industrial filings) are a bad fit for cloud VLMs. We built a **local** stack and measured:
 
 1. **Does multimodal generation help** over text-only RAG when both share the **same retrieved pages**?
-2. **Does hierarchical retrieval help** over flat page retrieval as documents grow from 5 → 100 pages?
-3. **How does answer quality and latency scale** with page count on a small local VLM?
+2. **Does hierarchical retrieval help** over flat page retrieval as visible context grows from 5 → 100 pages (toward full-report scale)?
+3. **How do answer quality and latency scale** with page count on a small local VLM?
 4. **Is the stack interactive enough** (TTFT / tok/s / VRAM) for laptop/desktop use?
 
-**Primary metrics:** ANLS (primary), EM, token F1, recall@k / page-hit@k, end-to-end & generation latency, peak RSS/VRAM.  
-**Fairness rule:** multimodal RAG uses the **same text index and retriever** as text-only; images are attached only for the retrieved top-k pages (never the full PDF).
+**Primary metrics:** ANLS (primary), EM, token F1, recall@k / page-hit@k, end-to-end & generation latency, peak RSS/VRAM.
+
+**Fairness rule:** multimodal RAG uses the **same text index and retriever** as text-only; images are attached only for retrieved pages (capped by `max_images`), never the full PDF.
 
 ---
 
 ## 1. Problem
 
-Long PDFs break naive RAG:
+Long reports break naive RAG:
 
 - OCR text alone loses layout, tables, and figures.
-- Flat page retrieval over 50–100 pages is noisy and expensive for a small local VLM.
+- Flat page retrieval over tens–hundreds of pages is noisy and expensive for a small local VLM.
 - Cloud multimodal APIs are strong but often unacceptable for **private documents**.
 
-**Goal:** a **local** pipeline that answers document questions with a small multimodal model, measures when text-only fails, and keeps latency/memory practical on a laptop/desktop (or a single Colab GPU).
+**Goal:** a **local** pipeline that answers questions on long reports with a small multimodal model, measures when text-only fails, and keeps latency/memory practical on a laptop/desktop (or a single Colab GPU).
 
 ---
 
@@ -57,40 +58,147 @@ Refs: [Gemma 3 model card](https://ai.google.dev/gemma/docs/core/model_card_3) �
 
 ---
 
-## 3. System pipeline
+## 3. How RAG works in this repo
 
-```text
-PDF
-  → PP-StructureV3 OCR / layout (Colab: tables on; stub/PDF-text enrich as fallback)
-  → DocumentArtifact (pages, sections, OCR text, page images)
-  → text index (page_text | hier_text)   ← shared by both RAG modes
-        │
-        ├─ Text-only RAG ── top-k OCR chunks ── Gemma text generate
-        │
-        └─ Multimodal RAG ── same top-k pages ── page images + OCR ── Gemma vision
+### 3.1 End-to-end pipeline
+
+Offline we ingest a PDF into a `DocumentArtifact`, then build **text-only** indexes. Online, a question hits one retriever; generation is either text-only or multimodal. Vision is **not** used for retrieval — only for generation after text retrieval.
+
+```mermaid
+flowchart TB
+  subgraph OFFLINE["Offline ingest & index"]
+    PDF["Long report PDF<br/>(200+ pages source)"] --> Render["Render page images"]
+    Render --> OCR["PP-StructureV3 OCR / layout<br/>(tables on; stub fallback)"]
+    OCR --> Art["DocumentArtifact<br/>pages · sections · markdown · image_path"]
+    Art --> PageIdx["page_text index<br/>1 chunk / page"]
+    Art --> HierIdx["hier_text index<br/>section coarse + page fine"]
+  end
+
+  subgraph ONLINE["Online QA"]
+    Q["User question"] --> Ret{"Retrieval mode"}
+    PageIdx --> Ret
+    HierIdx --> Ret
+    Ret -->|page| PR["PageRetriever<br/>rank all pages → top_k"]
+    Ret -->|hierarchical| HR["HierarchicalRetriever<br/>top coarse_k sections → filter pages → top_k"]
+    PR --> Hits["RetrievalHit list<br/>(shared text evidence)"]
+    HR --> Hits
+    Hits --> Pipe{"Generation pipeline"}
+    Pipe -->|text| T["Text-only RAG<br/>OCR hit texts only<br/>images cleared"]
+    Pipe -->|multimodal| M["Multimodal RAG<br/>OCR of ≤ max_images pages<br/>+ page PNGs from artifact"]
+    T --> GT["Gemma 3 4B QAT<br/>generate_text"]
+    M --> GM["Gemma 3 4B QAT + mmproj<br/>generate_multimodal"]
+    GT --> Ans["Answer + metrics"]
+    GM --> Ans
+  end
 ```
 
-Hierarchical retrieval: **section (coarse) → page/paragraph (fine)** with logged search paths.
+### 3.2 Page vs hierarchical retrieval
+
+Both modes embed the **question as text** and rank **text chunks**. Hierarchical only changes *which pages are candidates*.
+
+```mermaid
+flowchart LR
+  subgraph PAGE["Page retrieval"]
+    Q1["Question"] --> E1["Embed query"]
+    E1 --> R1["Rank every page chunk"]
+    R1 --> K1["Keep top_k = 3"]
+  end
+
+  subgraph HIER["Hierarchical retrieval"]
+    Q2["Question"] --> E2["Embed query"]
+    E2 --> C["Rank section summaries<br/>keep coarse_k = 5"]
+    C --> F["Allowed pages = ∪ section.page_ids"]
+    F --> R2["Rank fine page chunks<br/>inside allowed set"]
+    R2 --> K2["Keep top_k = 3"]
+  end
+```
+
+| | Page | Hierarchical |
+|--|------|----------------|
+| Index | `indices/{doc_id}/page_text` | `indices/{doc_id}/hier_text` |
+| Units | 1 chunk per page (OCR markdown + tables) | Coarse: section title/summary · Fine: page chunks |
+| Query path | Global top-k pages | Coarse filter → fine top-k |
+| Colab defaults | `top_k=3` | `coarse_k=5`, then `top_k=3` |
+
+### 3.3 Text-only vs multimodal generation (same hits)
+
+```mermaid
+flowchart TB
+  Hits["Same RetrievalHit list<br/>from page or hierarchical"] --> Split{"Pipeline"}
+
+  Split -->|text| TP["build_text_prompt<br/>• hit.text evidence blocks<br/>• image_path forced None"]
+  TP --> TG["llama.cpp generate_text<br/>max_tokens=128 · temp=0.1"]
+
+  Split -->|multimodal| MP["build_multimodal_prompt<br/>• unique pages in rank order<br/>• cap at max_images = 2<br/>• OCR text + page PNG paths"]
+  MP --> MG["llama.cpp generate_multimodal<br/>text + image data-URIs<br/>max_tokens=128 · temp=0.1"]
+```
+
+**What the model actually sees**
+
+| Pipeline | Prompt contents | Images |
+|----------|-----------------|--------|
+| Text-only | System prompt + question + OCR evidence from hits | None |
+| Multimodal | System prompt + question + OCR for ≤2 pages + image manifest | Page PNGs for those pages only |
+
+### 3.4 Repo layout
 
 ```text
 configs/          YAML (model, OCR, retrieval, experiments)
 src/pdf_vlm/      llm · ocr · data · index · retrieve · rag · eval · bench
 scripts/          download · ingest · index · RAG · harness · bench · Colab helpers
-data/             custom/{5,10,20,50,100} Hyundai WIA packs (+ optional public benches)
+data/             custom/{5,10,20,50,100} length packs from long reports (+ optional public benches)
 indices/          per-doc retrieval indexes (stable content-hash doc_id)
 results/          runs · reports · figures · bench  (gitignored artifacts)
 docs/             design notes + stage docs
 ```
 
-**Doc ID note:** `doc_id` is a **content hash** (`stable_doc_id`). Path-based IDs differ between Windows and Colab — always rebuild or sync questions to index stems before eval (`scripts/sync_questions_to_indices.py` / notebook cells).
+**Doc ID note:** `doc_id` is a **content hash** (`stable_doc_id`). Path-based IDs differ between Windows and Colab — rebuild or sync questions to index stems before eval (`scripts/sync_questions_to_indices.py`).
 
 ---
 
-## 4. Experiment design
+## 4. Experiment design (what we ran)
 
-### 4.1 Comparison matrix
+### 4.1 Dataset: long reports → length buckets
 
-**2 × 2 × length** (primary Colab study):
+Source documents are **200+ page** corporate / financial-style reports. For a controlled length ablation we build truncated packs:
+
+| Pack | Pages visible to the system | Role |
+|------|-----------------------------|------|
+| `custom_5` … `custom_100` | 5 / 10 / 20 / 50 / 100 | Same domain QA; only document length changes |
+| Demo Acme pack | short | Smoke tests / inference bench only |
+
+Questions mix **text** and **table** items. Schema: `DatasetBundle` → `DatasetDocument` → `QAExample`.
+
+```mermaid
+flowchart LR
+  SRC["Source report<br/>200+ pages"] --> CUT["Length truncation<br/>prepare script"]
+  CUT --> B5["5p pack"]
+  CUT --> B10["10p pack"]
+  CUT --> B20["20p pack"]
+  CUT --> B50["50p pack"]
+  CUT --> B100["100p pack"]
+  B5 --> M["Eval matrix"]
+  B10 --> M
+  B20 --> M
+  B50 --> M
+  B100 --> M
+```
+
+### 4.2 Comparison matrix
+
+**2 × 2 × length** (primary Colab study) = **20 cells**:
+
+```mermaid
+flowchart TB
+  subgraph MATRIX["Eval harness Cartesian product"]
+    D["Datasets<br/>custom_5 … custom_100"] --> Cell
+    P["Pipelines<br/>text · multimodal"] --> Cell
+    R["Retrievals<br/>page · hierarchical"] --> Cell
+    K["top_k = 3"] --> Cell
+    Cell["One cell =<br/>dataset × pipeline × retrieval × k"]
+  end
+  Cell --> Out["predictions.csv · aggregates · report.md"]
+```
 
 | Pipeline | Retrieval | Length buckets | top-k |
 |----------|-----------|----------------|-------|
@@ -104,33 +212,36 @@ Config: [`configs/experiments/eval_hw_wia_colab.yaml`](configs/experiments/eval_
 | OCR | `configs/ocr/pp_structure_v3_colab.yaml` (tables enabled) |
 | Generation | `max_tokens=128`, `temperature=0.1` |
 | Multimodal images | `max_images=2` |
+| Hierarchical coarse | `coarse_k=5` |
 | Seed | 42 (+ `config_snapshot.json` / `seed_snapshot.json` per run) |
 | Primary metric | ANLS |
 
-### 4.2 What each axis is testing
+**VRAM practice:** run **text** then **multimodal** in separate processes (do not load both Gemma contexts at once).
 
-| Axis | Hypothesis we tested | Observed (see §6) |
-|------|----------------------|-------------------|
+### 4.3 What each axis is testing
+
+| Axis | Hypothesis | Observed (see §6) |
+|------|------------|-------------------|
 | Text vs multimodal | Vision should help table/layout QA when retrieval is held fixed | **Rejected under ANLS** — text ≫ multimodal |
 | Page vs hierarchical | Coarse→fine should help as length grows | **Rejected for accuracy** — page ≥ hier; hier worse on 50/100 |
-| Length scaling | Quality/latency degrade with more pages | **Partially confirmed** — 5p best; 10p anomaly; 20–100 plateau |
+| Length scaling | Quality/latency degrade toward full-report scale | **Partially confirmed** — 5p best; 10p anomaly; 20–100 plateau |
 | Practicality | Q4_0 Gemma usable interactively on one GPU | **Confirmed** for text; multimodal ~2–3× slower |
 
-### 4.3 Tools & scripts
+### 4.4 Tools & scripts
 
 | Tool | Role |
 |------|------|
-| `scripts/prepare_hw_report_dataset.py` | Build length-truncated Hyundai WIA PDF packs + questions |
+| `scripts/prepare_hw_report_dataset.py` | Build length-truncated packs + questions from long source PDFs |
 | `scripts/colab_prepare_custom.py` | Colab ingest + index (OCR / stub / hash or BGE embedder) |
 | `scripts/sync_questions_to_indices.py` | Remap `questions.json` doc_ids to index stems |
 | `scripts/build_retrieval_indexes.py` | Build `page_text` / `hier_text` indexes |
 | `scripts/run_eval_harness.py` | Full matrix eval → CSV / JSON / Markdown reports |
 | `scripts/compare_retrieval.py` | Retrieval-only page vs hierarchical A/B |
 | `scripts/bench_gemma_inference.py` | TTFT / tok/s / RSS / VRAM practicality bench |
-| `notebooks/pdf_vlm_colab.ipynb` | End-to-end Colab runner (split text then multimodal to save VRAM) |
+| `notebooks/pdf_vlm_colab.ipynb` | End-to-end Colab runner |
 
 ```bash
-# Full HW-WIA matrix (after GGUF + indexes exist)
+# Full length matrix — text first (after GGUF + indexes exist)
 python scripts/run_eval_harness.py \
   --config configs/experiments/eval_hw_wia_colab.yaml \
   --datasets custom_5,custom_10,custom_20,custom_50,custom_100 \
@@ -138,7 +249,7 @@ python scripts/run_eval_harness.py \
   --retrievals page,hierarchical \
   --top-k 3
 
-# Then multimodal in a fresh process (VRAM-safe)
+# Multimodal in a fresh process (VRAM-safe)
 python scripts/run_eval_harness.py \
   --config configs/experiments/eval_hw_wia_colab.yaml \
   --pipelines multimodal \
@@ -153,35 +264,24 @@ Optional public benches (scaffolded): MP-DocVQA, MMLongBench-Doc subset — see 
 
 ---
 
-## 5. Datasets (this study)
+## 5. Key results (Colab, 2026-07-26)
 
-| Pack | Role | Notes |
-|------|------|-------|
-| **custom_5 … custom_100** | Controlled length ablation on **Hyundai WIA** quarterly-report–style PDFs | Korean text + table questions |
-| Demo Acme pack | Smoke tests / inference bench prompts | Not used for HW-WIA ANLS curves |
-
-Unified schema: `DatasetBundle` → `DatasetDocument(doc_id, pages, qa_pairs)` → `QAExample`.
-
----
-
-## 6. Key results (Colab, 2026-07-26)
-
-**Run:** full generation (`dry_run=false`), hashing or installed embedder as configured in the notebook, seed 42.  
+**Run:** full generation (`dry_run=false`), seed 42.  
 **Valid rows:** 152 (discard empty/mismatch runs such as `*_121830`).  
 **Coverage:** all 20 cells of `{text, multimodal} × {page, hierarchical} × {5,10,20,50,100}`.
 
-### 6.1 Headline
+### 5.1 Headline
 
 | Finding | Result |
 |---------|--------|
 | Text vs multimodal (mean ANLS) | **0.411** vs **0.054** (n=76 each) |
 | Text · page vs text · hierarchical | **0.490** vs **0.332** (n=38 each) |
 | Best short-doc cell | text × either retrieval @ **5p → 0.75** ANLS, recall@3 = **1.0** |
-| Long-doc (50/100) text | **page 0.542** vs **hierarchical 0.270** |
+| Long pack (50/100) text | **page 0.542** vs **hierarchical 0.270** |
 | Multimodal EM | **0.0** across all multimodal rows |
 | gold_answer_contained | **0.50** (same for both pipelines — evidence ceiling) |
 
-### 6.2 ANLS by page bucket
+### 5.2 ANLS by page bucket
 
 | Bucket | Text | Multimodal | Recall@3 (shared retriever) |
 |--------|------|------------|-----------------------------|
@@ -191,9 +291,9 @@ Unified schema: `DatasetBundle` → `DatasetDocument(doc_id, pages, qa_pairs)` �
 | 50p | 0.406 | 0.045 | 0.59 |
 | 100p | 0.406 | 0.045 | 0.59 |
 
-`custom_10` drop is **retrieval-driven** (e.g. company-name questions pulling DART portal noise), not a random crash — reproduced across two Colab exports.
+`custom_10` drop is **retrieval-driven** (entity / cover-page questions retrieving irrelevant metadata pages), not a random crash — reproduced across two Colab exports.
 
-### 6.3 Full cell matrix (mean ANLS)
+### 5.3 Full cell matrix (mean ANLS)
 
 | Bucket | Text·page | Text·hier | MM·page | MM·hier | n / cell |
 |--------|-----------|-----------|---------|---------|----------|
@@ -203,7 +303,7 @@ Unified schema: `DatasetBundle` → `DatasetDocument(doc_id, pages, qa_pairs)` �
 | 50p | **0.542** | 0.270 | 0.045 | 0.045 | 11 |
 | 100p | **0.542** | 0.270 | 0.045 | 0.045 | 11 |
 
-### 6.4 Question type
+### 5.4 Question type
 
 | Type | Text ANLS | Multimodal ANLS |
 |------|-----------|-----------------|
@@ -212,7 +312,7 @@ Unified schema: `DatasetBundle` → `DatasetDocument(doc_id, pages, qa_pairs)` �
 
 Multimodal did **not** outperform text on tables under string ANLS in this setup.
 
-### 6.5 Latency & memory (eval means)
+### 5.5 Latency & memory (eval means)
 
 | Config | Latency (ms) | Generation (ms) | Peak VRAM (MB) |
 |--------|--------------|-----------------|----------------|
@@ -221,7 +321,7 @@ Multimodal did **not** outperform text on tables under string ANLS in this setup
 | MM · page | ~5,200 | ~1,140 | ~10,900 |
 | MM · hier | ~6,800 | ~1,100 | ~15,500 |
 
-### 6.6 Inference practicality bench (separate)
+### 5.6 Inference practicality bench (separate)
 
 From `gemma_infer_bench_20260726_121834` (Colab GPU):
 
@@ -231,7 +331,7 @@ From `gemma_infer_bench_20260726_121834` (Colab GPU):
 
 Bench ≠ answer quality (synthetic / short prompts). Use it only for UX / capacity claims.
 
-### 6.7 How to read multimodal ANLS
+### 5.7 How to read multimodal ANLS
 
 Low multimodal ANLS is **partly metric + prompt**, not only “model useless”:
 
@@ -241,29 +341,30 @@ Low multimodal ANLS is **partly metric + prompt**, not only “model useless”:
 
 Re-score with citation stripping + Korean-forced decoding (or LLM-as-judge) before claiming semantic failure.
 
-### 6.8 Reproducibility
+### 5.8 Reproducibility
 
 A prior export (`…_042652`) matched these ANLS cells within **±0.008**, but skipped some long-doc multimodal+hierarchical cells (CUDA OOM). The **`…_123503`** export is the preferred complete baseline.
 
 ---
 
-## 7. Error analysis (observed)
+## 6. Error analysis (observed)
 
 | Failure mode | Evidence | Mitigation |
 |--------------|----------|------------|
-| Company-name miss on longer packs | Pred cites `dart.fss.or.kr` / “name not in evidence”; recall@3=0 | Boost cover/title pages; metadata field; better embedder (BGE-M3) |
-| Hierarchical hurts 50/100 text | page 0.54 vs hier 0.27; lower recall@3 | Prefer page retrieval for this corpus; tune coarse_k |
+| Entity / cover-page miss on longer packs | Pred says name “not in evidence”; recall@3=0 | Boost title/cover pages; metadata field; better embedder (BGE-M3) |
+| Hierarchical hurts 50/100 text | page 0.54 vs hier 0.27; lower recall@3 | Prefer page retrieval for this corpus; tune `coarse_k` |
 | Multimodal ANLS collapse | English + `[page N]`; EM=0 | Prompt: Korean only, no citations; re-evaluate |
-| Empty eval (`n_rows=0`) | Windows path-hash `doc_id` ≠ Colab index | Content-hash IDs + `sync_questions_to_indices` |
+| Empty eval (`n_rows=0`) | Path-hash `doc_id` ≠ index stem across machines | Content-hash IDs + `sync_questions_to_indices` |
 | OOM loading text+MM together | Dual Gemma contexts | Run text and multimodal **sequentially**; unload between |
 
 ---
 
-## 8. Limits & next steps
+## 7. Limits & next steps
 
 **Limits**
 
 - Small n per cell (4–11 questions) — directionally solid, not publication-grade CI.
+- Buckets are **truncated views** of 200+ page reports, not always the full source file in one index.
 - Colab often uses a **hashing embedder** to avoid BGE-M3 RAM spikes → understates retrieval vs production embeddings.
 - Evidence contain rate ~50% caps achievable exact match.
 - ANLS understates paraphrastic multimodal answers.
@@ -273,8 +374,8 @@ A prior export (`…_042652`) matched these ANLS cells within **±0.008**, but s
 
 1. Force Korean + no citation in multimodal prompts → re-score ANLS / add judge metric  
 2. Rebuild indexes with BGE-M3 when RAM allows  
-3. Fix cover-page / entity retrieval for company-name questions  
-4. Expand the HW-WIA question set (more table & multi-hop items)  
+3. Fix cover-page / entity retrieval for identity questions  
+4. Expand the question set (more table & multi-hop items; optional full 200+ page index runs)  
 5. Optional: publish anonymized aggregate CSVs under `results/colab_export/` (not raw run zips)
 
 ---
@@ -325,7 +426,7 @@ CLI: `python -m pdf_vlm --help`
 
 | Doc | Topic |
 |-----|-------|
-| [`final_report.md`](final_report.md) | Longer narrative report (may lag Colab numbers — prefer §6 above) |
+| [`final_report.md`](final_report.md) | Longer narrative report (may lag Colab numbers — prefer §5 above) |
 | [`docs/resume_bullets.md`](docs/resume_bullets.md) | Resume bullets |
 | [`docs/design.md`](docs/design.md) | Architecture |
 | [`docs/gemma_local_inference.md`](docs/gemma_local_inference.md) | Local Gemma setup |
